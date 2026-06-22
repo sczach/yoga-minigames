@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EKY Yoga Games • Prana Play</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* Additional inline styles for game containers if needed */
+    .game-container { display: none; }
+    .game-container.active { display: block; }
+    .hub { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-top: 2rem; }
+    .hub-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: var(--shadow);
+      border: 1px solid #e8e0d0;
+      transition: transform 0.3s ease, box-shadow 0.3s;
+      cursor: pointer;
+    }
+    .hub-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .hub-card h3 {
+      color: var(--accent);
+      margin-top: 0;
+    }
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      max-width: 420px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌿 EKY Yoga Games</h1>
+    <p>Learn • Breathe • Flow • Play</p>
+    <p style="font-size:0.95rem; opacity:0.9; margin-top:0.3rem;">A project of EKY Yoga Co. • Eastern Kentucky</p>
+  </header>
+
+  <div class="container">
+    <!-- Hub / Home -->
+    <section id="hub-section">
+      <div style="text-align:center; max-width:700px; margin:0 auto 2rem;">
+        <h2>Welcome to Prana Play</h2>
+        <p style="font-size:1.1rem; color:#555;">
+          Fun, interactive minigames to deepen your yoga practice. 
+          Match poses to build knowledge. Time your breath with Sun Salutations.
+          Perfect for all levels — play on your own or in community classes.
+        </p>
+      </div>
+
+      <div class="hub">
+        <!-- Pose Match Card -->
+        <div class="hub-card" onclick="showGame('pose-match')">
+          <div style="font-size:3rem; margin-bottom:1rem;">🧘‍♀️</div>
+          <h3>Pose Match</h3>
+          <p><strong>Learning Game</strong></p>
+          <p>Connect beautiful yoga pose images with their names, Sanskrit terms, benefits, and breath cues. Improve your visual memory and pose recognition.</p>
+          <div style="margin-top:1.5rem;">
+            <span class="btn">Start Matching →</span>
+          </div>
+        </div>
+
+        <!-- Breath & Flow Card -->
+        <div class="hub-card" onclick="showGame('breath-flow')">
+          <div style="font-size:3rem; margin-bottom:1rem;">🌬️</div>
+          <h3>Breath & Flow</h3>
+          <p><strong>Sun Salutation Game</strong></p>
+          <p>Follow the classic Surya Namaskar sequence. Watch the animated breath timer and click to transition poses at the perfect moment. Master breath-body synchronization.</p>
+          <div style="margin-top:1.5rem;">
+            <span class="btn">Begin Flow →</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:3rem; color:#666; font-size:0.95rem;">
+        More minigames coming soon • Built with ❤️ for accessible wellness
+      </div>
+    </section>
+
+    <!-- Pose Match Game -->
+    <section id="pose-match" class="game-container">
+      <button class="btn secondary" onclick="showGame('hub')" style="margin-bottom:1rem;">&larr; Back to Hub</button>
+      
+      <h2>🧘 Pose Match — Learning Game</h2>
+      <p>Click an image card, then click the matching text card. Match all pairs to complete the round!</p>
+      
+      <div class="score" id="pose-score">Matches: <span id="pose-matches">0</span> / <span id="pose-total">6</span></div>
+      
+      <div style="display:flex; gap:2rem; flex-wrap:wrap; justify-content:center;">
+        <!-- Images -->
+        <div>
+          <h4 style="text-align:center; color:var(--accent); margin-bottom:0.5rem;">Pose Images</h4>
+          <div id="image-grid" class="pose-grid"></div>
+        </div>
+        
+        <!-- Text Cards -->
+        <div>
+          <h4 style="text-align:center; color:var(--accent); margin-bottom:0.5rem;">Descriptions</h4>
+          <div id="text-grid" class="pose-grid" style="max-width:420px;"></div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:2rem;">
+        <button class="btn" onclick="resetPoseMatch()">Restart Game</button>
+        <button class="btn secondary" onclick="showGame('hub')">Back to Hub</button>
+      </div>
+    </section>
+
+    <!-- Breath & Flow Game -->
+    <section id="breath-flow" class="game-container">
+      <button class="btn secondary" onclick="showGame('hub')" style="margin-bottom:1rem;">&larr; Back to Hub</button>
+      
+      <h2>🌬️ Breath & Flow — Sun Salutation</h2>
+      
+      <div class="instructions">
+        <strong>How to play:</strong> Watch the central breath orb grow (inhale) and shrink (exhale). 
+        When you feel the natural transition point, click <strong>"Transition Pose"</strong>. 
+        Good timing = higher score. Complete the full flow!
+      </div>
+
+      <div style="text-align:center;">
+        <canvas id="breath-canvas" width="280" height="280"></canvas>
+      </div>
+
+      <div id="current-pose" style="text-align:center; margin:1rem 0; font-size:1.3rem; font-weight:600; color:var(--accent);"></div>
+      
+      <div class="sequence" id="sequence-display"></div>
+
+      <div style="text-align:center; margin:1.5rem 0;">
+        <button id="transition-btn" class="btn" onclick="handleTransition()" disabled>Transition Pose</button>
+        <button class="btn secondary" onclick="startBreathGame()" style="margin-left:0.5rem;">Restart Flow</button>
+      </div>
+
+      <div class="score" id="breath-score">Score: <span id="breath-points">0</span> / 100 • Poses completed: <span id="poses-done">0</span>/12</div>
+
+      <div style="text-align:center; margin-top:1rem;">
+        <button class="btn secondary" onclick="showGame('hub')">Back to Hub</button>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    &copy; 2026 EKY Yoga Co. • Non-profit wellness for Eastern Kentucky & beyond • <a href="https://github.com/sczach/yoga-minigames" target="_blank" style="color:inherit;">View on GitHub</a>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/pose-match.js"></script>
+  <script src="js/breath-game.js"></script>
+</body>
+</html>
